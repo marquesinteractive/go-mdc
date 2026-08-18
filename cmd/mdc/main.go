@@ -17,7 +17,7 @@ import (
 	mdc "github.com/marquesinteractive/go-mdc"
 )
 
-var version = "1.0.0"
+var version = "1.0.1"
 
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))

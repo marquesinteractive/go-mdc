@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/marquesinteractive/go-mdc/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesinteractive/go-mdc/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/marquesinteractive/go-mdc.svg)](https://pkg.go.dev/github.com/marquesinteractive/go-mdc)
+[![Go 1.22+](https://img.shields.io/badge/Go-1.22%2B-00ADD8.svg)](go.mod)
+[![Release](https://img.shields.io/github/v/release/marquesinteractive/go-mdc?color=black)](https://github.com/marquesinteractive/go-mdc/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 
 MDC is a deterministic, self-contained market-data container for compact quote
@@ -9,8 +11,13 @@ records. It combines a zero-allocation 32-bit `16/8/4/4` delta primitive with
 absolute block bases, explicit units, exact tick sizes, sessions, CRC32C,
 streaming, random access, and block-level recovery.
 
-The format has one public identity: **MDC**. `formatMajor=1` and
-`formatMinor=0` are wire-version fields, not separate product names.
+```text
+31                    16 15        8 7    4 3    0
++-----------------------+-----------+------+------+
+|        deltaT         | deltaBid  |spread| flags|
+|        16 bits        |  8 bits   |4 bits|4 bits|
++-----------------------+-----------+------+------+
+```
 
 ## What one MDC file carries
 
@@ -31,8 +38,8 @@ starts a new independent block. Monotonic ordering violations are errors.
 ## Install
 
 ```bash
-go get github.com/marquesinteractive/go-mdc@v1.0.0
-go install github.com/marquesinteractive/go-mdc/cmd/mdc@v1.0.0
+go get github.com/marquesinteractive/go-mdc@v1.0.1
+go install github.com/marquesinteractive/go-mdc/cmd/mdc@v1.0.1
 ```
 
 MDC requires Go 1.22 or newer and has no runtime dependencies outside the
@@ -91,6 +98,18 @@ func main() {
 `Writer.Close` flushes the final block and writes the finite-file index. It does
 not close the underlying `io.Writer`.
 
+## Performance
+
+| Operation | Reference result |
+| --- | ---: |
+| Pack | 2.804 ns/op |
+| Unpack | 1.685 ns/op |
+| Batch pack | 2.028 GiB/s |
+
+Reference measurements on an Intel Core i5-13400F with Go 1.26.2 and
+`GOMAXPROCS=1`. See [`BENCHMARKS.md`](BENCHMARKS.md) for methodology,
+variance, scope, and reproduction commands.
+
 ## CLI
 
 The CLI accepts a strict five- or seven-column CSV schema and commits output
@@ -127,7 +146,12 @@ serialization.
 is validated when read.
 
 ```go
-file, _ := os.Open("ticks.mdc")
+file, err := os.Open("ticks.mdc")
+if err != nil {
+    panic(err)
+}
+defer file.Close()
+
 reader, err := mdc.Open(file)
 if err != nil {
     panic(err)
@@ -136,6 +160,9 @@ if err := reader.SeekTimestamp(targetUnixMillis); err != nil {
     panic(err)
 }
 record, err := reader.ReadTick()
+if err != nil {
+    panic(err)
+}
 ```
 
 Timestamp seeking requires `NonDecreasing` or `StrictlyIncreasing` ordering.
@@ -212,6 +239,11 @@ session, and effective tick size. It does not encode volume, ask independently
 of spread, order-book depth, trade side, or venue-specific flag semantics.
 Applications must not claim full-feed losslessness unless every required source
 field is represented.
+
+## Versioning
+
+The format has one public identity: **MDC**. `formatMajor=1` and
+`formatMinor=0` are wire-version fields, not separate product names.
 
 See:
 
