@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Go ${{ matrix.go-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, go-version: "1.22.x" }
+          - { os: ubuntu-latest, go-version: "1.23.x" }
+          - { os: ubuntu-latest, go-version: "1.24.x" }
+          - { os: ubuntu-latest, go-version: "1.25.x" }
+          - { os: ubuntu-latest, go-version: "1.26.x" }
+          - { os: macos-latest, go-version: "1.22.x" }
+          - { os: macos-latest, go-version: stable }
+          - { os: windows-latest, go-version: "1.22.x" }
+          - { os: windows-latest, go-version: stable }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+      - run: go test -count=1 ./...
+
+  quality:
+    name: Format, vet, race, fuzz, and allocation gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
+      - name: Vet
+        run: go vet ./...
+      - name: Verify golden fixture hashes
+        working-directory: testdata
+        run: sha256sum --check SHA256SUMS
+      - name: Race detector and coverage
+        run: go test -count=1 -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Zero-allocation hot-path gate
+        run: go test -count=1 -run TestHotPathAllocations .
+      - name: Compiler-resistant benchmark smoke
+        run: go test -run=^$ -bench='Benchmark(Pack|Unpack|PackDeltas|WritePackedWordsBuffer|ContainerWrite4096|ContainerRead4096)$' -benchmem -benchtime=250ms .
+      - name: Fuzz field round trip
+        run: go test -run=^$ -fuzz=FuzzPackUnpack -fuzztime=10s .
+      - name: Fuzz packed-word identity
+        run: go test -run=^$ -fuzz=FuzzPackedWordIdentity -fuzztime=10s .
+      - name: Fuzz stream framing
+        run: go test -run=^$ -fuzz=FuzzPackedWordDecoder -fuzztime=10s .
+      - name: Fuzz hostile containers
+        run: go test -run=^$ -fuzz=FuzzContainerReader -fuzztime=10s .
+      - name: Fuzz canonical round trips
+        run: go test -run=^$ -fuzz=FuzzContainerRoundTrip -fuzztime=10s .
+      - name: Fuzz recovery
+        run: go test -run=^$ -fuzz=FuzzRecover -fuzztime=10s .
+
+  cross-build:
+    name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+      - run: go build ./...
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+
+  python:
+    name: Python interop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check numpy
+      - run: python -m unittest discover -s examples/04_python_polars_pandas -p "test_*.py"
+
+  c-interop:
+    name: C primitive and container interoperability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile independent C implementation
+        run: |
+          cc -std=c11 -Wall -Wextra -Werror examples/05_c_interop/main.c -o /tmp/mdc-c-golden
+          cc -std=c11 -Wall -Wextra -Werror examples/05_c_interop/container.c -o /tmp/mdc-c-container
+      - name: Validate shared golden vectors
+        run: |
+          /tmp/mdc-c-golden testdata/golden-packed-words.tsv
+          /tmp/mdc-c-container testdata/golden-container.bin

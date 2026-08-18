@@ -1,0 +1,11 @@
+* text=auto
+
+*.go text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf
+*.c text eol=lf
+*.tsv text eol=lf
+*.txt text eol=lf
+*.bin binary

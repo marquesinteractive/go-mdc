@@ -1,0 +1,7 @@
+name	delta_t	delta_bid	spread	flag	word_hex	bytes_le_hex
+zero	0	0	0	0	00000000	00000000
+positive_one	1	1	1	1	11010001	01000111
+negative_one	0	-1	0	0	00FF0000	0000FF00
+normal_boundaries	65534	127	15	14	EF7FFFFE	FEFF7FEF
+escape_markers	65535	-128	0	0	0080FFFF	FFFF8000
+mixed	1234	-7	3	9	93F904D2	D204F993
