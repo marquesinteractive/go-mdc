@@ -1,7 +1,11 @@
-# MDC v1.0.0: deterministic market-data blocks for Go
+# MDC v1.0.1: deterministic market-data blocks for Go
 
 MarquesInteractive is releasing MDC as an MIT-licensed Go library, CLI, and
 documented binary format for compact quote data.
+
+Version 1.0.1 supersedes the original module-proxy snapshot after the public
+repository was recreated. It does not change the MDC 1.0 wire contract or
+public Go API.
 
 MDC began with a four-byte `16/8/4/4` delta word. The public release keeps that
 primitive where it is effective, but surrounds it with the information and
@@ -47,8 +51,8 @@ losslessness because source volume is intentionally outside the current schema.
 ## Use it
 
 ```bash
-go get github.com/marquesinteractive/go-mdc@v1.0.0
-go install github.com/marquesinteractive/go-mdc/cmd/mdc@v1.0.0
+go get github.com/marquesinteractive/go-mdc@v1.0.1
+go install github.com/marquesinteractive/go-mdc/cmd/mdc@v1.0.1
 ```
 
 Start with [`README.md`](README.md), inspect the wire contract in
