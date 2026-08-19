@@ -1,0 +1,52 @@
+name: Feature or format proposal
+description: Propose an API, wire-format, tooling, or interoperability improvement.
+title: "proposal: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: MDC changes must preserve explicit scope, deterministic behavior, and reproducible evidence.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Go API
+        - Wire format
+        - CLI or tooling
+        - Interoperability
+        - Performance
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Describe the concrete limitation or use case without prescribing a solution first.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Explain the behavior, compatibility impact, and migration path.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and alternatives
+      description: Include benchmarks, fixtures, prior art, rejected alternatives, or reproduction material where applicable.
+    validations:
+      required: true
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Contract acknowledgement
+      options:
+        - label: I have identified whether this changes the MDC wire contract or public Go API.
+          required: true
+        - label: Performance claims include or will include reproducible methodology.
+          required: true

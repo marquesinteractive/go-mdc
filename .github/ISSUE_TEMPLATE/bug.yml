@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible defect in MDC, its tooling, or interoperability.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for helping improve MDC. Please provide a minimal, reproducible report.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include the smallest code sample, command, or fixture that reproduces the issue.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MDC version or commit
+      placeholder: v1.0.1 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Go version, operating system, and architecture
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Additional evidence
+      description: Logs, hashes, affected files, or other relevant technical evidence. Remove secrets and sensitive data.

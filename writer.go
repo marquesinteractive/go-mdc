@@ -260,7 +260,9 @@ func (w *Writer) writeHeader() error {
 
 func (w *Writer) appendWord(deltaT uint16, deltaBid int8, spread uint32, flags uint32) {
 	index := uint32(len(w.words))
-	w.words = append(w.words, Pack(deltaT, deltaBid, uint8(spread), uint8(flags)))
+	packedSpread := uint8(spread & uint32(MaxSpread))
+	packedFlags := uint8(flags & uint32(MaxFlag))
+	w.words = append(w.words, Pack(deltaT, deltaBid, packedSpread, packedFlags))
 	var mask uint8
 	if spread > uint32(MaxSpread) {
 		mask |= 1

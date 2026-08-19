@@ -100,6 +100,9 @@ func (r Rational) validate() error {
 
 func (r Rational) canonical() Rational {
 	divisor := gcd(uint64(r.Num), r.Den)
+	if divisor > math.MaxInt64 {
+		return r
+	}
 	return Rational{Num: r.Num / int64(divisor), Den: r.Den / divisor}
 }
 
