@@ -1,0 +1,8 @@
+# Default technical ownership
+* @CaioMarquesAI
+
+# Wire contract, core codec, and repository governance
+/mdc.go @CaioMarquesAI
+/container*.go @CaioMarquesAI
+/SPEC.md @CaioMarquesAI
+/.github/ @CaioMarquesAI

@@ -117,3 +117,23 @@ jobs:
         run: |
           /tmp/mdc-c-golden testdata/golden-packed-words.tsv
           /tmp/mdc-c-container testdata/golden-container.bin
+
+  required:
+    name: Required CI gate
+    if: ${{ always() }}
+    needs: [compatibility, quality, cross-build, python, c-interop]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all required jobs
+        env:
+          COMPATIBILITY_RESULT: ${{ needs.compatibility.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          CROSS_BUILD_RESULT: ${{ needs.cross-build.result }}
+          PYTHON_RESULT: ${{ needs.python.result }}
+          C_INTEROP_RESULT: ${{ needs.c-interop.result }}
+        run: |
+          test "$COMPATIBILITY_RESULT" = "success"
+          test "$QUALITY_RESULT" = "success"
+          test "$CROSS_BUILD_RESULT" = "success"
+          test "$PYTHON_RESULT" = "success"
+          test "$C_INTEROP_RESULT" = "success"
